@@ -1,0 +1,67 @@
+using System;
+using System.ComponentModel;
+
+class User : INotifyPropertyChanged
+{
+    private string login;
+    private string password;
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public string Login
+    {
+        get { return login; }
+        set
+        {
+            if (login != value && !string.IsNullOrEmpty(value))
+            {
+                login = value;
+                OnPropertyChanged("Login");
+            }
+        }
+    }
+
+    public string Password
+    {
+        get { return password; }
+        set
+        {
+            if (password != value && value.Length >= 8)
+            {
+                password = value;
+                OnPropertyChanged("Password");
+            }
+        }
+    }
+
+    protected void OnPropertyChanged(string propertyName)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+}
+
+
+
+
+
+using System;
+
+class Program
+{
+    static void Main()
+    {
+        User user = new User();
+
+        user.PropertyChanged += User_PropertyChanged;
+
+        user.Login = "admin";
+        user.Password = "12345678";
+
+        Console.ReadLine();
+    }
+
+    static void User_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        Console.WriteLine("Изменено свойство: " + e.PropertyName);
+    }
+}
