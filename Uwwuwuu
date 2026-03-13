@@ -1,42 +1,16 @@
 using System;
-using System.ComponentModel;
 
-class User : INotifyPropertyChanged
+class ErrorEventArgs : EventArgs
 {
-    private string login;
-    private string password;
+    public string ИмяСвойства { get; set; }
+    public string ТекстОшибки { get; set; }
+    public DateTime ДатаВозникновенияОшибки { get; set; }
 
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    public string Login
+    public ErrorEventArgs(string имя, string текст, DateTime дата)
     {
-        get { return login; }
-        set
-        {
-            if (login != value && !string.IsNullOrEmpty(value))
-            {
-                login = value;
-                OnPropertyChanged("Login");
-            }
-        }
-    }
-
-    public string Password
-    {
-        get { return password; }
-        set
-        {
-            if (password != value && value.Length >= 8)
-            {
-                password = value;
-                OnPropertyChanged("Password");
-            }
-        }
-    }
-
-    protected void OnPropertyChanged(string propertyName)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        ИмяСвойства = имя;
+        ТекстОшибки = текст;
+        ДатаВозникновенияОшибки = дата;
     }
 }
 
@@ -44,24 +18,84 @@ class User : INotifyPropertyChanged
 
 
 
-using System;
 
-class Program
+
+public string Login
 {
-    static void Main()
+    get { return login; }
+    set
     {
-        User user = new User();
-
-        user.PropertyChanged += User_PropertyChanged;
-
-        user.Login = "admin";
-        user.Password = "12345678";
-
-        Console.ReadLine();
+        if (login != value && !string.IsNullOrEmpty(value))
+        {
+            login = value;
+            OnPropertyChanged("Login");
+        }
+        else if (string.IsNullOrEmpty(value))
+        {
+            ErrorOccurred?.Invoke(this,
+                new ErrorEventArgs("логин",
+                "Логин не может быть пустым",
+                DateTime.Now));
+        }
     }
+}
 
-    static void User_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+
+
+
+
+
+
+
+
+public string Password
+{
+    get { return password; }
+    set
     {
-        Console.WriteLine("Изменено свойство: " + e.PropertyName);
+        if (password != value && value.Length >= 8)
+        {
+            password = value;
+            OnPropertyChanged("Password");
+        }
+        else if (value.Length < 8)
+        {
+            ErrorOccurred?.Invoke(this,
+                new ErrorEventArgs("пароль",
+                "Пароль должен быть не меньше 8 символов",
+                DateTime.Now));
+        }
     }
+}
+
+
+
+
+
+
+
+User user = new User();
+
+user.PropertyChanged += User_PropertyChanged;
+user.ErrorOccurred += User_ErrorOccurred;
+
+user.Login = "";
+user.Password = "123";
+
+Console.ReadLine();
+
+
+
+
+
+
+
+
+
+static void User_ErrorOccurred(object sender, ErrorEventArgs e)
+{
+    User u = (User)sender;
+
+    Console.WriteLine($"{e.ДатаВозникновенияОшибки}: у пользователя {u.Login} не изменено {e.ИмяСвойства}");
+    Console.WriteLine("Ошибка: " + e.ТекстОшибки);
 }
